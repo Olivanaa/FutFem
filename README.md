@@ -6,25 +6,35 @@ O diferencial da plataforma está na **centralização, democratização e trans
 
 Além disso, a solução busca automatizar os Encontros PassaBola, centralizando a gestão de inscrições, vagas e documentos, e facilitando o acompanhamento e organização de campeonatos e eventos. Dessa forma, reduz processos manuais e burocráticos, tornando mais eficiente a operação tanto para as usuárias quanto para organizadoras e gestores de projetos.
 
+## 🔗 Links Importantes
 
+- **Deploy da aplicação:** [https://fut-fem.vercel.app/](https://fut-fem.vercel.app/)  
+- **API (JSON Server):** [https://futfem-json-sever.onrender.com](https://futfem-json-sever.onrender.com)
 
 ## 🎯 Visão Geral
 
 A Plataforma FutFem conecta meninas e mulheres ao futebol em todo o Brasil, democratizando o acesso ao esporte e centralizando informações sobre treinos, campeonatos e oportunidades em um só lugar.
 
+## ✨ Funcionalidades 
 
-
-## ✨ Funcionalidades
+### Usuárias
 
 - **Mapa Interativo:** Visualize oportunidades de treinos e eventos próximos a você  
 - **Filtros Avançados:** Filtre por tipo, faixa etária, nível e custo  
 - **Geolocalização:** Descubra oportunidades perto de você  
 - **Cadastro Completo:** Perfil com informações pessoais, posição e nível de habilidade  
-- **Gestão de Encontros:** Organize e participe de eventos PassaBola  
-- **Sistema de Inscrições:** Inscreva-se em eventos com facilidade  
+- **Gestão de Encontros:** Participe de eventos PassaBola  
+- **Sistema de Inscrições:** Inscreva-se e acompanhe o status das inscrições
 - **Busca e Filtros:** Encontre eventos por tipo, faixa etária, nível e custo  
-- **Perfil de Usuária:** Acompanhe suas inscrições e histórico  
+- **Perfil de Usuária:** Acompanhe suas inscrições e histórico 
+- **Integração ViaCEP:** Preenchimento automático de endereços via CEP
+- **Coordenadas Nominatim:** Consulta de latitude e longitude para localização precisa no mapa
 
+### Admin
+- **Dashboard Administrativo:** Visualize estatísticas e gestão de usuários e eventos
+- **Cadastro de Eventos:** Crie e edite eventos
+- **Gestão de Inscrições:** Acompanhe inscrições de usuárias e vagas disponíveis
+- **Controle de Vagas e Histórico*:** Atualize ocupação de eventos e histórico de inscrições
 
 
 ## 🛠️ Tecnologias Utilizadas
@@ -37,8 +47,9 @@ A Plataforma FutFem conecta meninas e mulheres ao futebol em todo o Brasil, demo
 - Lucide React  
 
 ### Backend
-- JSON Server (API REST simulada)  
-- ViaCEP (integração para busca de endereços)  
+- JSON Server – API REST simulada para desenvolvimento 
+- ViaCEP – integração para preenchimento de endereços
+- Nominatim (OpenStreetMap) – obtenção de coordenadas geográficas
 
 ### Armazenamento
 - LocalStorage (armazenamento local de dados e tokens de usuário)  
@@ -74,36 +85,6 @@ A aplicação utiliza **JSON Server** como backend simulado. A seguir, os princi
 | GET    | `/locais/:id`      | Retorna um ponto de acesso específico |
 
 
-## 🚀 Instalação e Execução
-
-### Pré-requisitos
-- Node.js (v14 ou superior)  
-- npm ou yarn  
-
-### Passos para execução
-
-1. Clone o repositório:
-
-```bash
-git clone https://github.com/Olivanaa/FutFemMVP.git
-cd FutFemMVP
-```
-
-2. Instale as dependencias:
-
-```bash
-npm install
-``` 
-
-3. Execute o backend simulado:
-```bash
-npm json-server --watch db.json --port 3000
-``` 
-4. Execute o frontend:
-```bash
-npm run dev
-``` 
-
 ## 🔍 Observações
 
 O JSON Server é apenas para desenvolvimento e testes
@@ -111,6 +92,8 @@ O JSON Server é apenas para desenvolvimento e testes
 A integração com ViaCEP garante preenchimento automático de endereços por CEP.
 
 Geolocalização depende de permissão do navegador; caso negada, a aplicação ainda funciona, mas sem mostrar a localização exata.
+
+Coordenadas para o mapa são obtidas via Nominatim (OpenStreetMap) usando o nome do local ou endereço completo.
 
 ## 👥 Equipe 
 
