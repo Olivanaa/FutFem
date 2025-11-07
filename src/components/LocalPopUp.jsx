@@ -1,31 +1,46 @@
-import { Popup } from "react-leaflet"
-import { MapPin } from "lucide-react"
+import { Popup } from "react-leaflet";
+import { Calendar, MapPin } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { formatDate } from "../utils/DataFormato"
 
-export default function LocalPopUp({ local }) {
-    const { rua, bairro, cidade, descricao, data, nome } = local
+export default function LocalPopup({ local }) {
+    const navigate = useNavigate()
+    const { logradouro, numero, bairro, cidade } = local.local
+    const nome = local.nome
+    const data = local.data
+
+    const handleClick = () => {
+        if (local.tipo.toLowerCase() === "evento") {
+            navigate(`/encontro`)
+        } else {
+            return
+        }
+    }
 
     return (
         <Popup>
-            <div className="flex flex-col gap-2 max-w-xs">
-                <h1 className="text-lg font-bold text-gray-800 truncate">{nome}</h1>
+            <div className="flex flex-col gap-3 p-2">
+                <h1 className="text-lg font-bold text-gray-800">{nome}</h1>
 
-                <div className="flex items-center gap-1 text-gray-600 text-sm break-words">
-                    <MapPin className="w-4 h-4 flex-shrink-0" />
-                    <span className="whitespace-normal">{[rua, bairro, cidade].filter(Boolean).join(", ")}</span>
+                <div className="flex items-start gap-2 text-gray-600 text-sm">
+                    <MapPin className="w-4 h-4 flex-shrink-0 mt-1" />
+                    <span>{[logradouro, numero, bairro, cidade].filter(Boolean).join(", ")}</span>
                 </div>
+                {data && <div className="flex items-start gap-2 text-gray-600 text-sm">
+                    <Calendar className="w-4 h-4 flex-shrink-0" />
+                    <span>{formatDate(data)}</span>
+                    </div>}
+                
 
-                {local.descricao && <p className="text-gray-700 text-sm max-h-24 overflow-y-auto">{descricao}</p>}
-
-                {local.data && <p className="text-gray-500 text-sm">
-                    <span className="font-medium">Data:</span> {data}
-                    </p>}
-
-                <div className="flex justify-center mt-2">
-                    <button className="px-3 py-1 w-full bg-lilas text-white rounded hover:bg-roxo transition text-sm">
+                <div className="flex justify-center mt-3">
+                    <button
+                        onClick={handleClick}
+                        className="px-3 py-1 w-full bg-lilas text-white rounded hover:bg-roxo transition text-sm"
+                    >
                         Saiba Mais
                     </button>
                 </div>
             </div>
-        </Popup>
+        </Popup >
     )
 }

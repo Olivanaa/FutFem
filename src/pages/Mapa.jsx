@@ -53,25 +53,6 @@ const iconLaranja = new L.Icon({
     shadowSize: [41, 41]
 })
 
-const iconAmarelo = new L.Icon({
-    iconUrl: '/location-pin-amarelo.png',
-    shadowUrl: markerShadow,
-    iconSize: [30, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-})
-
-
-
-const iconesPorTipo = {
-    evento: iconRoxo,
-    quadra: iconAzul,
-    escolinha: iconVerde,
-    clube: iconRosa,
-    academia: iconLaranja
-}
-
 const faixasEtaria = [
     "Mirim",
     "Sub-11",
@@ -84,16 +65,17 @@ const faixasEtaria = [
 
 const niveis = ["Iniciante", "Intermediário", "Avançado", "Profissional"]
 
-const tipos = [
-    "Evento",
-    "Quadra",
-    "Escolinha",
-    "Clube",
-    "Academia"
+const tiposInternos = [
+    { id: "evento", label: "Evento", icon: iconRoxo },
+    { id: "quadra", label: "Quadra", icon: iconAzul },
+    { id: "escolinha", label: "Escolinha", icon: iconVerde },
+    { id: "clube", label: "Clube", icon: iconRosa },
+    { id: "academia", label: "Academia", icon: iconLaranja },
 ]
 
 export default function Mapa() {
     const [locais, setLocais] = useState([])
+    const [eventos, setEventos] = useState([])
     const [busca, setBusca] = useState("")
     const [showFilters, setShowFilters] = useState(false)
     const [center, setCenter] = useState([-23.5505, -46.6333])
@@ -103,10 +85,12 @@ export default function Mapa() {
     const [nivel, setNivel] = useState("Todos")
     const [showLegend, setShowLegend] = useState(false)
 
+    const API_URL = import.meta.env.VITE_API_URL;
+
     useEffect(() => {
         async function fetchLocais() {
             try {
-                const res = await fetch("http://localhost:3000/locais")
+                const res = await fetch(`${API_URL}/locais`)
 
                 const data = await res.json()
                 console.log(data)
@@ -117,15 +101,39 @@ export default function Mapa() {
             }
         }
 
-        fetchLocais()
-    }, [])
+        async function fetchEventos() {
+            try {
+                const res = await fetch(`${API_URL}/eventos`)
+                const data = await res.json()
+                setEventos(data)
+            } catch (err) {
+                console.error("Erro ao buscar eventos:", err)
+            }
+        }
 
-    const locaisFiltrados = locais.filter((l) => {
+        fetchLocais()
+        fetchEventos()
+    }, [])
+    const locaisFiltrados = locais.concat(eventos).filter((l) => {
         const matchBusca = l.nome.toLowerCase().includes(busca.toLowerCase())
-        const matchTipo = tipo === "Todos" || l.tipo.toLowerCase() === tipo.toLowerCase()
-        const matchFaixa = faixaEtaria === "Todas" || l.faixaEtaria.find(f => f.toLowerCase() === faixaEtaria.toLowerCase())
-        const matchCusto = custo === "Todos" || l.custo.toLowerCase() === custo.toLowerCase()
-        const matchNivel = nivel === "Todos" || l.nivel.toLowerCase() === nivel.toLowerCase()
+        const matchTipo = tipo === "Todos" || l.tipo?.toLowerCase() === tipo.toLowerCase()
+
+        if (l.tipo === "eventoPlataforma") {
+            if (faixaEtaria !== "Todas" || custo !== "Todos" || nivel !== "Todos") {
+                return false
+            }
+            return matchBusca && matchTipo
+        }
+        const matchFaixa =
+            faixaEtaria === "Todas" ||
+            l.faixaEtaria?.some((f) => f.toLowerCase() === faixaEtaria.toLowerCase())
+
+        const matchCusto =
+            custo === "Todos" || l.custo?.toLowerCase() === custo.toLowerCase()
+
+        const matchNivel =
+            nivel === "Todos" || l.nivel?.toLowerCase() === nivel.toLowerCase()
+
         return matchBusca && matchTipo && matchFaixa && matchCusto && matchNivel
     })
 
@@ -188,8 +196,8 @@ export default function Mapa() {
                                 className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lilas transition"
                             >
                                 <option value="Todos">Todos</option>
-                                {tipos.map((t) => (
-                                    <option key={t} value={t}>{t}</option>
+                                {tiposInternos.map((t) => (
+                                    <option key={t.id} value={t.id}>{t.label}</option>
                                 ))}
                             </select>
                         </div>
@@ -261,8 +269,8 @@ export default function Mapa() {
                 {locaisFiltrados.map((local) => (
                     <Marker
                         key={local.id}
-                        position={local.pos}
-                        icon={iconesPorTipo[local.tipo.toLowerCase()]}
+                        position={local.local.pos}
+                        icon={tiposInternos.find(t => t.id === local.tipo).icon}
                     >
                         <LocalPopUp local={local} />
                     </Marker>
@@ -295,7 +303,7 @@ export default function Mapa() {
                 <div className="absolute bottom-16 right-4 z-50 bg-white p-4 rounded-lg shadow-md md:hidden">
                     <h3 className="font-bold mb-2 text-sm">Legenda</h3>
                     <div className="space-y-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 mb-1">
                             <div className="w-3 h-3 bg-[#A263E6] rounded-full"></div>
                             <span className="text-xs">Evento</span>
                         </div>

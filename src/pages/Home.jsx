@@ -20,6 +20,7 @@ export default function Home() {
     const navigate = useNavigate()
 
     const usuario = getLoggedUser()
+    
 
     if (!usuario || usuario.role == "user") {
         return (

@@ -57,6 +57,13 @@ export default function LoginRegister() {
 
     const [cadastroErro, setCadastroErro] = useState("")
 
+    const [isLoading, setIsLoading] = useState(false)
+
+    const [isCepLoading, setIsCepLoading] = useState(false)
+
+    const API_URL = import.meta.env.VITE_API_URL;
+
+
     const handleLogin = async (e) => {
         e.preventDefault()
 
@@ -68,8 +75,10 @@ export default function LoginRegister() {
         setLoginError("")
 
         try {
-            const response = await fetch(`http://localhost:3000/usuarios?email=${loginEmail}&senha=${loginSenha}`)
+            setIsLoading(true)
+            const response = await fetch(`${API_URL}/usuarios?email=${loginEmail}&senha=${loginSenha}`)
             const data = await response.json()
+
 
             if (data.length === 0) {
                 setLoginError("Email ou senha incorretos")
@@ -88,6 +97,8 @@ export default function LoginRegister() {
         } catch (error) {
             console.error("Erro ao fazer login:", error)
             setLoginError("Erro ao tentar logar. Tente novamente mais tarde.")
+        } finally {
+            setIsLoading(false)
         }
     }
 
@@ -150,7 +161,8 @@ export default function LoginRegister() {
         console.log("Cadastro:", usuario)
 
         try {
-            const response = await fetch("http://localhost:3000/usuarios", {
+            setIsLoading(true)
+            const response = await fetch(`${API_URL}/usuarios`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -184,6 +196,8 @@ export default function LoginRegister() {
         } catch (error) {
             console.error(error)
             setCadastroErro("Erro ao cadastrar usuário. Tente novamente mais tarde.")
+        } finally {
+            setIsLoading(false)
         }
     }
 
@@ -192,16 +206,27 @@ export default function LoginRegister() {
             setCepErro("CEP inválido")
             return
         }
-        const resultado = await handleCep(cep)
-        if (resultado.erro) {
-            setCepErro("CEP inválido")
-            return
+        try {
+            setIsCepLoading(true)
+            const resultado = await handleCep(cep)
+            if (resultado.erro) {
+                setCepErro("CEP inválido")
+                return
+            }
+
+            setCepErro("")
+            setCadastroLogradouro(resultado.rua)
+            setCadastroBairro(resultado.bairro)
+            setCadastroCidade(resultado.cidade)
+            setCadastroEstado(resultado.estado)
+        } catch (error) {
+            console.error("Erro ao buscar CEP:", error);
+            setCepErro("Erro ao buscar CEP")
+
+        } finally {
+            setIsCepLoading(false)
         }
-        setCepErro("")
-        setCadastroLogradouro(resultado.rua)
-        setCadastroBairro(resultado.bairro)
-        setCadastroCidade(resultado.cidade)
-        setCadastroEstado(resultado.estado)
+
     }
 
     return (
@@ -262,9 +287,37 @@ export default function LoginRegister() {
                                 </div>
                                 <button
                                     type="submit"
-                                    className="bg-lilas hover:bg-roxo cursor-pointer text-white py-3 rounded-xl font-semibold shadow-lg transform hover:scale-105 transition"
+                                    disabled={isLoading}
+                                    className={`bg-lilas hover:bg-roxo text-white py-3 rounded-xl font-semibold shadow-lg transform transition ${isLoading ? "opacity-70 cursor-not-allowed" : "hover:scale-105 cursor-pointer"
+                                        }`}
                                 >
-                                    Entrar
+                                    {isLoading ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                            <svg
+                                                className="animate-spin h-5 w-5 text-white"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <circle
+                                                    className="opacity-25"
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    strokeWidth="4"
+                                                ></circle>
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                                ></path>
+                                            </svg>
+                                            Entrando...
+                                        </span>
+                                    ) : (
+                                        "Entrar"
+                                    )}
                                 </button>
                             </form>
                         ) : (
@@ -323,22 +376,50 @@ export default function LoginRegister() {
                                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
                                         <div className="col-span-1 lg:col-span-12 focus-within:text-gray-900">
                                             <label className="block text-sm font-medium mb-1">CEP</label>
-                                            <input
-                                                type="text"
-                                                placeholder="Digite seu CEP"
-                                                value={cadastroCEP}
-                                                onChange={(e) => setCadastroCEP(e.target.value)}
-                                                onBlur={async () => {
-                                                    if (cadastroCEP.trim() !== "") {
-                                                        await buscarEndereco(cadastroCEP)
-                                                    }
-                                                }}
-                                                maxLength={8}
-                                                className="px-4 py-2 w-full border rounded-xl focus:outline-none focus:ring-2 focus:ring-verde focus:border-verde"
-                                            />
-                                            {cepErro && (
-                                                <p className="text-red-500 text-sm mt-1">{cepErro}</p>
-                                            )}
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Digite seu CEP"
+                                                    value={cadastroCEP}
+                                                    onChange={(e) => setCadastroCEP(e.target.value)}
+                                                    onBlur={async () => {
+                                                        if (cadastroCEP.trim() !== "") {
+                                                            await buscarEndereco(cadastroCEP);
+                                                        }
+                                                    }}
+                                                    maxLength={8}
+                                                    disabled={isCepLoading}
+                                                    className={`px-4 py-2 w-full border rounded-xl focus:outline-none focus:ring-2 focus:ring-verde focus:border-verde ${isCepLoading ? "opacity-70 cursor-not-allowed" : ""
+                                                        }`}
+                                                />
+
+                                                {isCepLoading && (
+                                                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                                        <svg
+                                                            className="animate-spin h-5 w-5 text-verde"
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <circle
+                                                                className="opacity-25"
+                                                                cx="12"
+                                                                cy="12"
+                                                                r="10"
+                                                                stroke="currentColor"
+                                                                strokeWidth="4"
+                                                            ></circle>
+                                                            <path
+                                                                className="opacity-75"
+                                                                fill="currentColor"
+                                                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                                            ></path>
+                                                        </svg>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {cepErro && <p className="text-red-500 text-sm mt-1">{cepErro}</p>}
                                         </div>
                                         <div className="col-span-1 lg:col-span-8">
                                             <input
@@ -460,9 +541,37 @@ export default function LoginRegister() {
 
                                 <button
                                     type="submit"
-                                    className="bg-lilas hover:bg-roxo cursor-pointer text-white py-3 rounded-xl font-semibold shadow-lg transform hover:scale-105 transition"
+                                    disabled={isLoading}
+                                    className={`bg-lilas hover:bg-roxo text-white py-3 rounded-xl font-semibold shadow-lg transform transition ${isLoading ? "opacity-70 cursor-not-allowed" : "hover:scale-105 cursor-pointer"
+                                        }`}
                                 >
-                                    Cadastrar
+                                    {isLoading ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                            <svg
+                                                className="animate-spin h-5 w-5 text-white"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <circle
+                                                    className="opacity-25"
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    strokeWidth="4"
+                                                ></circle>
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                                ></path>
+                                            </svg>
+                                            Cadastrando...
+                                        </span>
+                                    ) : (
+                                        "Cadastrar"
+                                    )}
                                 </button>
                             </form>
                         )}

@@ -14,14 +14,18 @@ export default function Encontro() {
     const usuario = getLoggedUser()
     const navigate = useNavigate()
 
+    const API_URL = import.meta.env.VITE_API_URL
+
     useEffect(() => {
         async function fetchEncontros() {
             try {
-                const response = await fetch(`http://localhost:3000/eventos`)
+                const response = await fetch(`${API_URL}/eventos`)
                 const data = await response.json()
-                setEncontros(data)
+                setEncontros(data);
             } catch (err) {
                 console.error("Erro ao buscar encontros:", err)
+            } finally {
+                setLoading(false)
             }
         }
 
@@ -33,6 +37,7 @@ export default function Encontro() {
             setMensagem("Selecione um encontro para se inscrever.")
             return
         }
+
         try {
             const inscricao = usuario.inscricoes.find(
                 (i) => i.eventoId === selectedEncontro.id
@@ -42,14 +47,13 @@ export default function Encontro() {
                 setMensagem("Você já está inscrita nesse encontro.")
                 return
             }
-
             const statusInscricao = selectedEncontro.vagas > 0 ? "Confirmada" : "Lista de Espera"
 
             const eventoAtualizado = {
                 ...selectedEncontro,
                 inscritos: [
                     ...selectedEncontro.inscritos,
-                    { usuarioId: usuario.id, status: statusInscricao }
+                    { usuarioId: usuario.id, status: statusInscricao, dataInscricao: new Date().toISOString().split("T")[0]}
                 ],
                 ocupadas: statusInscricao === "Confirmada" ? selectedEncontro.ocupadas + 1 : selectedEncontro.ocupadas,
                 vagas: statusInscricao === "Confirmada" ? selectedEncontro.vagas - 1 : selectedEncontro.vagas,
@@ -62,7 +66,7 @@ export default function Encontro() {
             }
 
             const eventoResponse = await fetch(
-                `http://localhost:3000/eventos/${selectedEncontro.id}`,
+                `${API_URL}/eventos/${selectedEncontro.id}`,
                 {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
@@ -83,11 +87,11 @@ export default function Encontro() {
                 dataInscricao: new Date().toISOString().split("T")[0]
             })
 
-            const usuarioResponse = await fetch(`http://localhost:3000/usuarios/${usuario.id}`, {
+            const usuarioResponse = await fetch(`${API_URL}/usuarios/${usuario.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(usuario),
-            })
+            });
 
             if (!usuarioResponse.ok) {
                 throw new Error("Erro ao atualizar usuário");
@@ -102,10 +106,9 @@ export default function Encontro() {
 
             navigate("/perfil")
 
-
         } catch (err) {
             console.error(err);
-            setMensagem("Erro ao se inscrever. Tente novamente.")
+            setMensagem("Erro ao se inscrever. Tente novamente.");
         }
     }
 

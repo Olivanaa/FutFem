@@ -21,9 +21,9 @@ export default function UserLocation() {
 
         navigator.geolocation.getCurrentPosition(
             (pos) => {
-                const latitude = pos.coords.latitude;
-                const longitude = pos.coords.longitude;
-                console.log("Latitude:", latitude, "Longitude:", longitude);
+                const latitude = pos.coords.latitude
+                const longitude = pos.coords.longitude
+                console.log("Latitude:", latitude, "Longitude:", longitude)
                 showLocationOnMap(latitude, longitude)
             },
             (err) => {

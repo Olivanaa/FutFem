@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts'
+import { XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, Legend, CartesianGrid } from 'recharts'
 import { formatDate } from "../utils/DataFormato"
 import { Link } from 'react-router-dom'
 
@@ -7,9 +7,13 @@ export default function AdminDashboard() {
     const [eventos, setEventos] = useState([])
     const [selectedEvento, setSelectedEvento] = useState(null)
 
+    const cores = ["#6B46C1", "#48BB78", "#3182CE", "#E53E3E"]
+
+    const API_URL = import.meta.env.VITE_API_URL;
+
     useEffect(() => {
         async function fetchEventos() {
-            const response = await fetch("http://localhost:3000/eventos")
+            const response = await fetch(`${API_URL}/eventos`)
             const data = await response.json()
             setEventos(data)
             console.log(data)
@@ -25,7 +29,7 @@ export default function AdminDashboard() {
         )
 
         const eventoAtualizado = { ...evento, inscritos: inscritosAtualizados };
-        await fetch(`http://localhost:3000/eventos/${eventoId}`, {
+        await fetch(`${API_URL}/eventos/${eventoId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(eventoAtualizado),
@@ -144,11 +148,37 @@ export default function AdminDashboard() {
                 <div className="mt-6 p-4 bg-white rounded-lg shadow">
                     <h2 className="font-bold mb-2">Estatísticas de Inscritos</h2>
                     <ResponsiveContainer width="100%" height={400}>
-                        <LineChart>
-                            <XAxis dataKey="data" />
-                            <YAxis />
-                            <Tooltip />
-                            <Legend />
+                        <LineChart margin={{ top: 20, right: 30, left: 0, bottom: 10 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                            <XAxis
+                                dataKey="data"
+                                tick={{ fill: "#4B5563", fontSize: 12 }}
+                                label={{ value: "Data", position: "insideBottomRight", offset: -5 }}
+                            />
+                            <YAxis
+                                tick={{ fill: "#4B5563", fontSize: 12 }}
+                                label={{
+                                    value: "Total de Inscritos",
+                                    angle: -90,
+                                    position: "insideLeft",
+                                    offset: 10,
+                                }}
+                            />
+                            <Tooltip
+                                contentStyle={{
+                                    backgroundColor: "#fff",
+                                    borderRadius: "0.75rem",
+                                    border: "1px solid #E5E7EB",
+                                    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+                                }}
+                                labelStyle={{ color: "#111827", fontWeight: "bold" }}
+                                formatter={(value) => [`${value} inscrito${value !== 1 ? "s" : ""}`]}
+                            />
+                            <Legend
+                                verticalAlign="top"
+                                align="center"
+                                wrapperStyle={{ paddingBottom: "1rem" }}
+                            />
 
                             {eventos.map((evento, index) => (
                                 <Line
@@ -157,9 +187,15 @@ export default function AdminDashboard() {
                                     type="monotone"
                                     dataKey="total"
                                     name={evento.nome}
-                                    stroke={["#6B46C1", "#48BB78", "#3182CE", "#E53E3E"][index % 4]}
-                                    strokeWidth={2}
-                                    dot
+                                    stroke={cores[index % cores.length]}
+                                    strokeWidth={2.5}
+                                    dot={{ r: 4 }}
+                                    activeDot={{
+                                        r: 6,
+                                        strokeWidth: 2,
+                                        fill: cores[index % cores.length],
+                                        stroke: "#fff",
+                                    }}
                                 />
                             ))}
                         </LineChart>

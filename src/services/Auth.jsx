@@ -1,5 +1,7 @@
 import { Navigate } from "react-router-dom"
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const isAuthenticated = () => {
     return localStorage.getItem("token") !== null
 }
@@ -16,7 +18,7 @@ export const logout = () => {
 }
 
 export const fetchLoggedUser = async (userId) => {
-    const response = await fetch(`http://localhost:3000/usuarios/${userId}`)
+    const response = await fetch(`${API_URL}/usuarios/${userId}`)
     if (!response.ok) throw new Error("Erro ao buscar usuário")
     return await response.json()
 }

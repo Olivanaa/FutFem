@@ -10,6 +10,8 @@ export default function Perfil() {
 
     const [usuario, setUsuario] = useState(getLoggedUser())
 
+    const API_URL = import.meta.env.VITE_API_URL;
+
     useEffect(() => {
         const loadUser = async () => {
             try {
@@ -25,7 +27,7 @@ export default function Perfil() {
 
     const handleCancelarInscricao = async (inscricao) => {
         try {
-            const eventoResponse = await fetch(`http://localhost:3000/eventos/${inscricao.eventoId}`)
+            const eventoResponse = await fetch(`${API_URL}/eventos/${inscricao.eventoId}`)
             const evento = await eventoResponse.json()
 
             const eventoAtualizado = {
@@ -46,7 +48,7 @@ export default function Perfil() {
                 ]
             }
 
-            await fetch(`http://localhost:3000/eventos/${evento.id}`, {
+            await fetch(`${API_URL}/eventos/${evento.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(eventoAtualizado),
@@ -67,7 +69,7 @@ export default function Perfil() {
             }
 
             const usuarioResponse = await fetch(
-                `http://localhost:3000/usuarios/${usuario.id}`,
+                `${API_URL}/usuarios/${usuario.id}`,
                 {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },

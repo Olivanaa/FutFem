@@ -2,7 +2,7 @@ import { useState } from "react"
 import { handleCep } from "../utils/Cep"
 import { MapPinHouse } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-import { MapContainer, TileLayer} from "react-leaflet"
+import { MapContainer, TileLayer } from "react-leaflet"
 import L from 'leaflet'
 import PointLocation from "../components/PointLocation"
 
@@ -38,6 +38,12 @@ export default function AdminCadastro() {
     const [coordenadas, setCoordenadas] = useState(null)
 
     const [buscarNoMapa, setBuscarNoMapa] = useState(false)
+
+    const [isLoading, setIsLoading] = useState(false)
+
+    const [isCepLoading, setIsCepLoading] = useState(false)
+
+    const API_URL = import.meta.env.VITE_API_URL;
 
     const handleBuscar = (e) => {
         e.preventDefault()
@@ -89,7 +95,8 @@ export default function AdminCadastro() {
         console.log("Cadastro:", evento)
 
         try {
-            const response = await fetch("http://localhost:3000/eventos", {
+            setIsLoading(true)
+            const response = await fetch(`${API_URL}/eventos`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(evento),
@@ -106,6 +113,8 @@ export default function AdminCadastro() {
         } catch (err) {
             console.error(err);
             setMensagemErro("Erro ao cadastrar evento.")
+        }finally{
+            setIsLoading(false)
         }
     }
 
@@ -114,16 +123,27 @@ export default function AdminCadastro() {
             setCepErro("CEP inválido")
             return
         }
-        const resultado = await handleCep(cep)
-        if (resultado.erro) {
-            setCepErro("CEP inválido")
-            return
+        try {
+            setIsCepLoading(true)
+            const resultado = await handleCep(cep)
+            if (resultado.erro) {
+                setCepErro("CEP inválido")
+                return
+            }
+
+            setCepErro("")
+            setLogradouro(resultado.rua)
+            setBairro(resultado.bairro)
+            setCidade(resultado.cidade)
+            setEstado(resultado.estado)
+        } catch (error) {
+            console.error("Erro ao buscar CEP:", error);
+            setCepErro("Erro ao buscar CEP")
+
+        } finally {
+            setIsCepLoading(false)
         }
-        setCepErro("")
-        setLogradouro(resultado.rua)
-        setBairro(resultado.bairro)
-        setCidade(resultado.cidade)
-        setEstado(resultado.estado)
+
     }
 
     return (
@@ -182,11 +202,40 @@ export default function AdminCadastro() {
                                             }
                                         }}
                                         maxLength={8}
-                                        className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-verde"
+                                        disabled={isCepLoading}
+                                        className={`px-4 py-2 w-full border rounded-xl focus:outline-none focus:ring-2 focus:ring-verde focus:border-verde ${isCepLoading ? "opacity-70 cursor-not-allowed" : ""
+                                            }`}
                                     />
                                 </div>
+                                {isCepLoading && (
+                                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                        <svg
+                                            className="animate-spin h-5 w-5 text-verde"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"
+                                            ></circle>
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                            ></path>
+                                        </svg>
+                                    </div>
+                                )}
                                 {cepErro && (
-                                    <p className="text-red-500 text-sm mt-1">{cepErro}</p>
+                                    <div className="col-span-1 lg:col-span-12">
+                                        <p className="text-red-500 text-sm mt-1">{cepErro}</p>
+                                    </div>
+
                                 )}
                                 <div className="col-span-1 lg:col-span-8">
                                     <input type="text"
@@ -273,14 +322,44 @@ export default function AdminCadastro() {
                         <div className="flex flex-col sm:flex-row gap-4 mt-6 justify-end">
                             <button
                                 type="submit"
-                                className="flex-1 sm:flex-none px-6 py-3 bg-lilas hover:bg-roxo text-white rounded-xl font-semibold shadow-lg transition-transform transform hover:scale-105 text-center"
+                                disabled={isLoading}
+                                className={`flex-1 sm:flex-none px-6 py-3 bg-lilas hover:bg-roxo text-white rounded-xl font-semibold shadow-lg transition-transform transform hover:scale-105 text-center ${isLoading ? "opacity-70 cursor-not-allowed" : "hover:scale-105 cursor-pointer"
+                                    }`}
                             >
-                                Cadastrar Evento
+                                {isLoading ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <svg
+                                            className="animate-spin h-5 w-5 text-white"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"
+                                            ></circle>
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                            ></path>
+                                        </svg>
+                                        Cadastrando...
+                                    </span>
+                                ) : (
+                                    "Cadastrar Evento"
+
+                                )}
+
                             </button>
                             <button
                                 type="button"
                                 onClick={() => navigate("/admin")}
-                                className="flex-1 sm:flex-none px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-xl font-semibold shadow-lg transition-transform transform hover:scale-105 text-center"
+                                className="{flex-1 sm:flex-none px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-xl font-semibold shadow-lg transition-transform transform hover:scale-105 text-center}"
                             >
                                 Voltar
                             </button>
